@@ -95,6 +95,11 @@ Model modelCyborg;
 Model modelMayAu;
 Model modelCowboy;
 Model modelBob;
+Model modelBatman;
+
+//Cargamos los modelos para la animacion de pacman
+Model modelPacManDescanso;
+Model modelPacManCorriendo;
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint skyboxTextureID;
@@ -107,12 +112,12 @@ GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
 GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 GL_TEXTURE_CUBE_MAP_NEGATIVE_Z };
 
-std::string fileNames[6] = { "../Textures/mp_bloodvalley/blood-valley_ft.tga",
-		"../Textures/mp_bloodvalley/blood-valley_bk.tga",
-		"../Textures/mp_bloodvalley/blood-valley_up.tga",
-		"../Textures/mp_bloodvalley/blood-valley_dn.tga",
-		"../Textures/mp_bloodvalley/blood-valley_rt.tga",
-		"../Textures/mp_bloodvalley/blood-valley_lf.tga" };
+std::string fileNames[6] = { "../Textures/field-skyboxes/FishPond/posz.jpg", //Front - PosZ
+		"../Textures/field-skyboxes/FishPond/negz.tga", //Back - NegZ
+		"../Textures/field-skyboxes/FishPond/posy.tga", //Up - PosY
+		"../Textures/field-skyboxes/FishPond/negy.tga", //Down - NegY 
+		"../Textures/field-skyboxes/FishPond/negx.tga", //Right - NegX
+		"../Textures/field-skyboxes/FishPond/posx.tga" }; //Left - PosX
 
 bool exitApp = false;
 int lastMousePosX, offsetX = 0;
@@ -130,7 +135,15 @@ glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
 glm::mat4 modelMatrixMayAu = glm::mat4(1.0f);
 glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixBob = glm::mat4(1.0f);
+glm::mat4 modelMatrixBatman = glm::mat4(1.0f);
 
+//Modelo Pacman
+glm::mat4 modelMatrixPacmanCorriendo = glm::mat4(1.0f);
+glm::mat4 modelMatrixPacmanDescanso = glm::mat4(1.0f);
+
+int animationMayAuIndex = 0;
+int animationBatmanIndex = 8;
+int animationPacmanIndex = 0;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 float rotBuzzHead = 0.0, rotBuzzLeftarm = 0.0, rotBuzzLeftForeArm = 0.0, rotBuzzLeftHand = 0.0;
 int modelSelected = 0;
@@ -352,6 +365,16 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelBob.loadModel("../models/boblampclean/boblampclean.md5anim");
 	modelBob.setShader(&shaderMulLighting);
 
+	//My animated model
+	modelBatman.loadModel("../models/Batman_Beyond/Texture2D/batmanBeyon.fbx");
+	modelBatman.setShader(&shaderMulLighting);
+
+	// PACMAN
+	modelPacManDescanso.loadModel("../models/PacMan/Pac-Man_Descanso.fbx");
+	modelPacManDescanso.setShader(&shaderMulLighting);
+	modelPacManCorriendo.loadModel("../models/PacMan/Pac-Man_Corriendo.fbx");
+	modelPacManCorriendo.setShader(&shaderMulLighting);
+
 	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 	
 	// Carga de texturas para el skybox
@@ -567,6 +590,9 @@ void destroy() {
 	modelCowboy.destroy();
 	modelMayAu.destroy();
 	modelBob.destroy();
+	modelBatman.destroy();
+	modelPacManCorriendo.destroy();
+	modelPacManDescanso.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -644,7 +670,7 @@ bool processInput(bool continueApplication) {
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 4)
+		if(modelSelected > 6)
 			modelSelected = 0;
 		if(modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
@@ -772,6 +798,63 @@ bool processInput(bool continueApplication) {
 	else if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		modelMatrixBuzz = glm::translate(modelMatrixBuzz, glm::vec3(0.0, 0.0, -0.02));
 
+	//Control de May
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+		modelMatrixMayAu = glm::rotate(modelMatrixMayAu, 0.02f, glm::vec3(0, 1, 0));
+		animationMayAuIndex = 0;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+		modelMatrixMayAu = glm::rotate(modelMatrixMayAu, -0.02f, glm::vec3(0, 1, 0));
+		animationMayAuIndex = 0;
+	}
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+		modelMatrixMayAu = glm::translate(modelMatrixMayAu, glm::vec3(0.0, 0.0, 0.02));
+		animationMayAuIndex = 0;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+		modelMatrixMayAu = glm::translate(modelMatrixMayAu, glm::vec3(0.0, 0.0, -0.02));
+		animationMayAuIndex = 0;
+	}
+
+	//Control Batman
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+		modelMatrixBatman = glm::rotate(modelMatrixBatman, 0.02f, glm::vec3(0, 1, 0));
+		animationBatmanIndex = 14;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+		modelMatrixBatman = glm::rotate(modelMatrixBatman, -0.02f, glm::vec3(0, 1, 0));
+		animationBatmanIndex = 14;
+	}
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+		modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(0.0, 0.0, 0.02));
+		animationBatmanIndex = 14;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+		modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(0.0, 0.0, -0.02));
+		animationBatmanIndex = 14;
+	}
+
+	//PACAMAN controls run
+	if (modelSelected == 6 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+		modelMatrixPacmanCorriendo = glm::rotate(modelMatrixPacmanCorriendo, 0.02f, glm::vec3(0, 1, 0));
+		modelMatrixPacmanDescanso = glm::rotate(modelMatrixPacmanDescanso, 0.02f, glm::vec3(0, 1, 0));
+		animationPacmanIndex = 1;
+	} else if (modelSelected == 6 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+		modelMatrixPacmanCorriendo = glm::rotate(modelMatrixPacmanCorriendo, -0.02f, glm::vec3(0, 1, 0));
+		modelMatrixPacmanDescanso = glm::rotate(modelMatrixPacmanDescanso, -0.02f, glm::vec3(0, 1, 0));
+		animationPacmanIndex = 1;
+	}
+	if (modelSelected == 6 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+		modelMatrixPacmanCorriendo = glm::translate(modelMatrixPacmanCorriendo, glm::vec3(0.0, 0.0, -0.02));
+		modelMatrixPacmanDescanso = glm::translate(modelMatrixPacmanDescanso, glm::vec3(0.0, 0.0, -0.02));
+		animationPacmanIndex = 1;
+	}
+	else if (modelSelected == 6 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+		modelMatrixPacmanCorriendo = glm::translate(modelMatrixPacmanCorriendo, glm::vec3(0.0, 0.0, 0.02));
+		modelMatrixPacmanDescanso = glm::translate(modelMatrixPacmanDescanso, glm::vec3(0.0, 0.0, 0.02));
+		animationPacmanIndex = 1;
+	}
+
 	glfwPollEvents();
 	return continueApplication;
 }
@@ -805,6 +888,11 @@ void applicationLoop() {
 
 	modelMatrixMayAu = glm::translate(modelMatrixMayAu, glm::vec3(15.0, 0.03, -5.0));
 
+	modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(20.0, 0.03, -10.0));
+
+	//PACMAN coordinates
+	//modelMatrixPacmanCorriendo = glm::translate(modelMatrixPacmanCorriendo, glm::vec3(3.0f, 0.00f, 30.0f));
+	//modelMatrixPacmanDescanso = glm::translate(modelMatrixPacmanCorriendo, glm::vec3(3.0f, 0.00f, 30.0f));
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -967,7 +1055,7 @@ void applicationLoop() {
 		 * Esfera 1
 		*********************************************/
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureHighwayID);
+		glBindTexture(GL_TEXTURE_2D, textureHighwayID); //Cambiar a water
 		shaderMulLighting.setInt("texture1", 0);
 		esfera1.setScale(glm::vec3(3.0, 3.0, 3.0));
 		esfera1.setPosition(glm::vec3(3.0f, 2.0f, -10.0f));
@@ -1149,8 +1237,28 @@ void applicationLoop() {
 
 		glm::mat4 modelMatrixMayAuBody = glm::mat4(modelMatrixMayAu);
 		modelMatrixMayAuBody = glm::scale(modelMatrixMayAuBody, glm::vec3(0.02f));
-		modelMayAu.setAnimationIndex(1);
+		modelMayAu.setAnimationIndex(animationMayAuIndex);
 		modelMayAu.render(modelMatrixMayAuBody);
+		animationMayAuIndex = 1;
+
+		glm::mat4 modelMatrixBatmanBody = glm::mat4(modelMatrixBatman);
+		modelMatrixBatmanBody = glm::scale(modelMatrixBatmanBody, glm::vec3(0.005f));
+		modelBatman.setAnimationIndex(animationBatmanIndex);
+		modelBatman.render(modelMatrixBatmanBody);
+		animationBatmanIndex = 8;
+
+		//Animacion Pacman CUll
+		if (animationPacmanIndex == 1) {
+			glm::mat4 modelMatrixPacmanCorriendoBody = glm::mat4(modelMatrixPacmanCorriendo);
+			modelMatrixPacmanCorriendoBody = glm::scale(modelMatrixPacmanCorriendoBody, glm::vec3(0.005, 0.005, 0.005));
+			modelPacManCorriendo.render(modelMatrixPacmanCorriendoBody);
+			animationPacmanIndex = 0;
+		}
+		else {
+			glm::mat4 modelMatrixPacmanDescansoBody = glm::mat4(modelMatrixPacmanDescanso);
+			modelMatrixPacmanDescansoBody = glm::scale(modelMatrixPacmanDescansoBody, glm::vec3(0.005, 0.005, 0.005));
+			modelPacManDescanso.render(modelMatrixPacmanDescansoBody);
+		}
 
 		/*******************************************
 		 * Skybox
