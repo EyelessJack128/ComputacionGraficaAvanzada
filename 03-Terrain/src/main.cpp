@@ -853,6 +853,14 @@ void applicationLoop() {
 	int numberAdvance = 0;
 	int maxAdvance = 0.0;
 
+	int stateLambo = 0;
+	float advanceCountLambo = 0.0;
+	float rotCountLambo = 0.0;
+	float rotWheelsXLambo = 0.0;
+	float rotWheelsYLambo = 0.0;
+	int numberAdvanceLambo = 0;
+	int maxAdvanceLambo = 0.0;
+
 	matrixModelRock = glm::translate(matrixModelRock, glm::vec3(-3.0, 0.0, 2.0));
 
 	modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
@@ -1016,8 +1024,14 @@ void applicationLoop() {
 
 		// Lambo car
 		glDisable(GL_CULL_FACE);
+		glm::vec3 normalLambo = terreno.getNormalTerrain(modelMatrixLambo[3][0], modelMatrixLambo[3][2]);
+		glm::vec3 ejexLambo = glm ::vec3(modelMatrixLambo[0]);
+		glm::vec3 ejezLambo =glm::normalize(glm::cross(ejexLambo, normalLambo));
+		ejexLambo = glm::normalize(glm::cross(normalLambo, ejezLambo));
+		modelMatrixLambo[0] = glm::vec4(ejexLambo, 0.0);
+		modelMatrixLambo[1] = glm::vec4(normalLambo, 0.0);
+		modelMatrixLambo[3][1] = terreno.getHeightTerrain(modelMatrixLambo[3][0], modelMatrixLambo[3][2]);
 		glm::mat4 modelMatrixLamboChasis = glm::mat4(modelMatrixLambo);
-		modelMatrixLamboChasis = glm::scale(modelMatrixLamboChasis, glm::vec3(1.3, 1.3, 1.3));
 		modelLambo.render(modelMatrixLamboChasis);
 		glActiveTexture(GL_TEXTURE0);
 		glm::mat4 modelMatrixLamboLeftDor = glm::mat4(modelMatrixLamboChasis);
@@ -1026,10 +1040,90 @@ void applicationLoop() {
 		modelMatrixLamboLeftDor = glm::translate(modelMatrixLamboLeftDor, glm::vec3(-1.08866, -0.705743, -0.968917));
 		modelLamboLeftDor.render(modelMatrixLamboLeftDor);
 		modelLamboRightDor.render(modelMatrixLamboChasis);
-		modelLamboFrontLeftWheel.render(modelMatrixLamboChasis);
-		modelLamboFrontRightWheel.render(modelMatrixLamboChasis);
-		modelLamboRearLeftWheel.render(modelMatrixLamboChasis);
-		modelLamboRearRightWheel.render(modelMatrixLamboChasis);
+
+		glm::vec3 normalLamboFrontLeftWheel = terreno.getNormalTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::vec3 ejexLamboFrontLeftWheel = glm ::vec3(modelMatrixLamboChasis[0]);
+		glm::vec3 ejezLamboFrontLeftWheel =glm::normalize(glm::cross(ejexLamboFrontLeftWheel, normalLamboFrontLeftWheel));
+		ejexLamboFrontLeftWheel = glm::normalize(glm::cross(normalLamboFrontLeftWheel, ejezLamboFrontLeftWheel));
+		modelMatrixLamboChasis[0] = glm::vec4(ejexLamboFrontLeftWheel, 0.0);
+		modelMatrixLamboChasis[1] = glm::vec4(normalLamboFrontLeftWheel, 0.0);
+		modelMatrixLamboChasis[3][1] = terreno.getHeightTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::mat4 modelMatrixLamboFrontLeftWheel = glm::mat4(modelMatrixLamboChasis);
+		/*glm::vec3 normalLamboFrontLeftWheel = terreno.getNormalTerrain(modelMatrixLamboFrontLeftWheel[3][0], modelMatrixLamboFrontLeftWheel[3][2]);
+		glm::vec3 ejexLamboFrontLeftWheel = glm ::vec3(modelMatrixLamboFrontLeftWheel[0]);
+		glm::vec3 ejezLamboFrontLeftWheel =glm::normalize(glm::cross(ejexLamboFrontLeftWheel, normalLamboFrontLeftWheel));
+		ejexLamboFrontLeftWheel = glm::normalize(glm::cross(normalLamboFrontLeftWheel, ejezLamboFrontLeftWheel));
+		modelMatrixLamboFrontLeftWheel[0] = glm::vec4(ejexLamboFrontLeftWheel, 0.0);
+		modelMatrixLamboFrontLeftWheel[1] = glm::vec4(normalLamboFrontLeftWheel, 0.0);
+		modelMatrixLamboFrontLeftWheel[3][1] = terreno.getHeightTerrain(modelMatrixLamboFrontLeftWheel[3][0], modelMatrixLamboFrontLeftWheel[3][2]);*/
+		modelMatrixLamboFrontLeftWheel = glm::translate(modelMatrixLamboFrontLeftWheel, glm::vec3(0.7411, 0.3802, 1.399));
+		modelMatrixLamboFrontLeftWheel = glm::rotate(modelMatrixLamboFrontLeftWheel, rotWheelsXLambo, glm::vec3(1, 0, 0));
+		modelMatrixLamboFrontLeftWheel = glm::rotate(modelMatrixLamboFrontLeftWheel, -rotWheelsYLambo, glm::vec3(0, 1, 0));
+		modelMatrixLamboFrontLeftWheel = glm::translate(modelMatrixLamboFrontLeftWheel, glm::vec3(-0.7411, -0.3802, -1.399));
+		modelLamboFrontLeftWheel.render(modelMatrixLamboFrontLeftWheel);
+
+		glm::vec3 normalLamboFrontRightWheel = terreno.getNormalTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::vec3 ejexLamboFrontRightWheel = glm ::vec3(modelMatrixLamboChasis[0]);
+		glm::vec3 ejezLamboFrontRightWheel =glm::normalize(glm::cross(ejexLamboFrontRightWheel, normalLamboFrontRightWheel));
+		ejexLamboFrontRightWheel = glm::normalize(glm::cross(normalLamboFrontRightWheel, ejezLamboFrontRightWheel));
+		modelMatrixLamboChasis[0] = glm::vec4(ejexLamboFrontRightWheel, 0.0);
+		modelMatrixLamboChasis[1] = glm::vec4(normalLamboFrontRightWheel, 0.0);
+		modelMatrixLamboChasis[3][1] = terreno.getHeightTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::mat4 modelMatrixLamboFrontRightWheel = glm::mat4(modelMatrixLamboChasis);
+		/*glm::vec3 normalLamboFrontRightWheel = terreno.getNormalTerrain(modelMatrixLamboFrontRightWheel[3][0], modelMatrixLamboFrontRightWheel[3][2]);
+		glm::vec3 ejexLamboFrontRightWheel = glm ::vec3(modelMatrixLamboFrontRightWheel[0]);
+		glm::vec3 ejezLamboFrontRightWheel =glm::normalize(glm::cross(ejexLamboFrontRightWheel, normalLamboFrontRightWheel));
+		ejexLamboFrontRightWheel = glm::normalize(glm::cross(normalLamboFrontRightWheel, ejezLamboFrontRightWheel));
+		modelMatrixLamboFrontRightWheel[0] = glm::vec4(ejexLamboFrontRightWheel, 0.0);
+		modelMatrixLamboFrontRightWheel[1] = glm::vec4(normalLamboFrontRightWheel, 0.0);
+		modelMatrixLamboFrontRightWheel[3][1] = terreno.getHeightTerrain(modelMatrixLamboFrontRightWheel[3][0], modelMatrixLamboFrontRightWheel[3][2]);*/
+		modelMatrixLamboFrontRightWheel = glm::translate(modelMatrixLamboFrontRightWheel, glm::vec3(-0.7464, 0.3785, 1.4));
+		modelMatrixLamboFrontRightWheel = glm::rotate(modelMatrixLamboFrontRightWheel, rotWheelsXLambo, glm::vec3(1, 0, 0));
+		modelMatrixLamboFrontRightWheel = glm::rotate(modelMatrixLamboFrontRightWheel, -rotWheelsYLambo, glm::vec3(0, 1, 0));
+		modelMatrixLamboFrontRightWheel = glm::translate(modelMatrixLamboFrontRightWheel, glm::vec3(0.7464, -0.3785, -1.4));
+		modelLamboFrontRightWheel.render(modelMatrixLamboFrontRightWheel);
+
+		glm::vec3 normalLamboRearLeftWheel = terreno.getNormalTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::vec3 ejexLamboRearLeftWheel = glm ::vec3(modelMatrixLamboChasis[0]);
+		glm::vec3 ejezLamboRearLeftWheel =glm::normalize(glm::cross(ejexLamboRearLeftWheel, normalLamboRearLeftWheel));
+		ejexLamboRearLeftWheel = glm::normalize(glm::cross(normalLamboRearLeftWheel, ejezLamboRearLeftWheel));
+		modelMatrixLamboChasis[0] = glm::vec4(ejexLamboRearLeftWheel, 0.0);
+		modelMatrixLamboChasis[1] = glm::vec4(normalLamboRearLeftWheel, 0.0);
+		modelMatrixLamboChasis[3][1] = terreno.getHeightTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::mat4 modelMatrixLamboRearLeftWheel = glm::mat4(modelMatrixLamboChasis);
+		/*glm::vec3 normalLamboRearLeftWheel = terreno.getNormalTerrain(modelMatrixLamboRearLeftWheel[3][0], modelMatrixLamboRearLeftWheel[3][2]);
+		glm::vec3 ejexLamboRearLeftWheel = glm ::vec3(modelMatrixLamboRearLeftWheel[0]);
+		glm::vec3 ejezLamboRearLeftWheel =glm::normalize(glm::cross(ejexLamboRearLeftWheel, normalLamboRearLeftWheel));
+		ejexLamboRearLeftWheel = glm::normalize(glm::cross(normalLamboRearLeftWheel, ejezLamboRearLeftWheel));
+		modelMatrixLamboRearLeftWheel[0] = glm::vec4(ejexLamboRearLeftWheel, 0.0);
+		modelMatrixLamboRearLeftWheel[1] = glm::vec4(normalLamboRearLeftWheel, 0.0);
+		modelMatrixLamboRearLeftWheel[3][1] = terreno.getHeightTerrain(modelMatrixLamboRearLeftWheel[3][0], modelMatrixLamboRearLeftWheel[3][2]);*/
+		modelMatrixLamboRearLeftWheel = glm::translate(modelMatrixLamboRearLeftWheel, glm::vec3(0.7359, 0.4005, -1.601));
+		modelMatrixLamboRearLeftWheel = glm::rotate(modelMatrixLamboRearLeftWheel, rotWheelsXLambo, glm::vec3(1, 0, 0));
+		modelMatrixLamboRearLeftWheel = glm::rotate(modelMatrixLamboRearLeftWheel, -rotWheelsYLambo, glm::vec3(0, 1, 0));
+		modelMatrixLamboRearLeftWheel = glm::translate(modelMatrixLamboRearLeftWheel, glm::vec3(-0.7359, -0.4005, 1.601));
+		modelLamboRearLeftWheel.render(modelMatrixLamboRearLeftWheel);
+
+		glm::vec3 normalLamboRearRightWheel = terreno.getNormalTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::vec3 ejexLamboRearRightWheel = glm ::vec3(modelMatrixLamboChasis[0]);
+		glm::vec3 ejezLamboRearRightWheel =glm::normalize(glm::cross(ejexLamboRearRightWheel, normalLamboRearRightWheel));
+		ejexLamboRearRightWheel = glm::normalize(glm::cross(normalLamboRearRightWheel, ejezLamboRearRightWheel));
+		modelMatrixLamboChasis[0] = glm::vec4(ejexLamboRearRightWheel, 0.0);
+		modelMatrixLamboChasis[1] = glm::vec4(normalLamboRearRightWheel, 0.0);
+		modelMatrixLamboChasis[3][1] = terreno.getHeightTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
+		glm::mat4 modelMatrixLamboRearRightWheel = glm::mat4(modelMatrixLamboChasis);
+		/*glm::vec3 normalLamboRearRightWheel = terreno.getNormalTerrain(modelMatrixLamboRearRightWheel[3][0], modelMatrixLamboRearRightWheel[3][2]);
+		glm::vec3 ejexLamboRearRightWheel = glm ::vec3(modelMatrixLamboRearRightWheel[0]);
+		glm::vec3 ejezLamboRearRightWheel =glm::normalize(glm::cross(ejexLamboRearRightWheel, normalLamboRearRightWheel));
+		ejexLamboRearRightWheel = glm::normalize(glm::cross(normalLamboRearRightWheel, ejezLamboRearRightWheel));
+		modelMatrixLamboRearRightWheel[0] = glm::vec4(ejexLamboRearRightWheel, 0.0);
+		modelMatrixLamboRearRightWheel[1] = glm::vec4(normalLamboRearRightWheel, 0.0);
+		modelMatrixLamboRearRightWheel[3][1] = terreno.getHeightTerrain(modelMatrixLamboRearRightWheel[3][0], modelMatrixLamboRearRightWheel[3][2]);*/
+		modelMatrixLamboRearRightWheel = glm::translate(modelMatrixLamboRearRightWheel, glm::vec3(-0.72, 0.3979, -1.601));
+		modelMatrixLamboRearRightWheel = glm::rotate(modelMatrixLamboRearRightWheel, rotWheelsXLambo, glm::vec3(1, 0, 0));
+		modelMatrixLamboRearRightWheel = glm::rotate(modelMatrixLamboRearRightWheel, -rotWheelsYLambo, glm::vec3(0, 1, 0));
+		modelMatrixLamboRearRightWheel = glm::translate(modelMatrixLamboRearRightWheel, glm::vec3(0.72, -0.3979, 1.601));
+		modelLamboRearRightWheel.render(modelMatrixLamboRearRightWheel);
 		// Se regresa el cull faces IMPORTANTE para las puertas
 		glEnable(GL_CULL_FACE);
 
@@ -1329,20 +1423,69 @@ void applicationLoop() {
 		}
 
 		// Maquina de estado de lambo
-		switch (stateDoor)
-		{
+		/**********State Machine Lamborgini**************/
+		switch (stateLambo){
 		case 0:
-			dorRotCount += 0.5;
-			if(dorRotCount > 75)
-				stateDoor = 1;
+			if(numberAdvanceLambo == 0)
+				maxAdvanceLambo = 5.0;
+			if (numberAdvanceLambo == 1)
+				maxAdvanceLambo = 40.0;
+			if (numberAdvanceLambo == 2)
+				maxAdvanceLambo = 35.5;
+			if (numberAdvanceLambo == 3)
+				maxAdvanceLambo = 40.0;
+			if (numberAdvanceLambo == 4)
+				maxAdvanceLambo = 30.5;
+			stateLambo = 1;
 			break;
 		case 1:
-			dorRotCount -= 0.5;
-			if(dorRotCount < 0){
-				dorRotCount = 0.0;
-				stateDoor = 0;
+			modelMatrixLambo = glm::translate(modelMatrixLambo, glm::vec3(0.0f, 0.0f, avance));
+			advanceCountLambo += avance;
+			rotWheelsXLambo += 0.05;
+			rotWheelsYLambo -= 0.02;
+			if(rotWheelsYLambo <= 0)
+				rotWheelsYLambo = 0;
+			if (advanceCountLambo > maxAdvanceLambo){
+				advanceCountLambo = 0;
+				numberAdvanceLambo++;
+				stateLambo = 2;
+				if(numberAdvanceLambo > 4){
+					stateLambo = 3;
+				}
 			}
-		
+			break;
+		case 2:
+			modelMatrixLambo = glm::translate(modelMatrixLambo, glm::vec3(0.0f, 0.0f, 0.025f));
+			modelMatrixLambo = glm::rotate(modelMatrixLambo, glm::radians(-giroEclipse), glm::vec3(0, 1, 0));
+			rotCountLambo -= giroEclipse;
+			rotWheelsXLambo += 0.005;
+			rotWheelsYLambo += 0.02;
+			if (rotWheelsYLambo >= 0.25)
+				rotWheelsYLambo = 0.25;
+			if (rotCountLambo <= -90){
+				stateLambo = 0;
+				rotCountLambo = 0;
+			}
+			break;
+		case 3:
+			switch (stateDoor){
+			case 0:
+				dorRotCount += 0.6;
+				if (dorRotCount > 75.0)
+					stateDoor = 1;
+				break;
+			case 1:
+				dorRotCount -= 0.6;
+				if (dorRotCount < 0){
+					stateDoor = 0;
+					stateLambo = 0;
+					numberAdvanceLambo = 0;
+				}		
+				break;
+			default:
+				break;
+			}
+			break;
 		default:
 			break;
 		}
