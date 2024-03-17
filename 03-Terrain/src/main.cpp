@@ -100,9 +100,11 @@ Model cowboyModelAnimate;
 Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
+// Batman
+Model batmanModelAnimate;
 
 //Terrain
-Terrain terreno(-1, -1, 50, 32, "../Textures/heightmap2024-2.png");
+Terrain terreno(-1, -1, 400, 25, "../Textures/heightmapPractica3.png");
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint skyboxTextureID;
@@ -138,8 +140,10 @@ glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardian = glm::mat4(1.0f);
 glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
+glm::mat4 modelMatrixBatman = glm::mat4(1.0f);
 
 int animationMayowIndex = 1;
+int animationBatmanIndex = 8;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 float rotBuzzHead = 0.0, rotBuzzLeftarm = 0.0, rotBuzzLeftForeArm = 0.0, rotBuzzLeftHand = 0.0;
 int modelSelected = 0;
@@ -367,6 +371,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
+	//Batman
+	batmanModelAnimate.loadModel("../models/Batman_Beyond/Texture2D/batmanBeyon.fbx");
+	batmanModelAnimate.setShader(&shaderMulLighting);
+
 	//Terrain
 	terreno.init();
 	terreno.setShader(&shaderMulLighting);
@@ -586,6 +594,7 @@ void destroy() {
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+	batmanModelAnimate.destroy();
 	terreno.destroy();
 
 	// Textures Delete
@@ -664,7 +673,7 @@ bool processInput(bool continueApplication) {
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 4)
+		if(modelSelected > 5)
 			modelSelected = 0;
 		if(modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
@@ -809,6 +818,24 @@ bool processInput(bool continueApplication) {
 		animationMayowIndex = 0;
 	}
 
+	//Control Batman
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+		modelMatrixBatman = glm::rotate(modelMatrixBatman, 0.02f, glm::vec3(0, 1, 0));
+		animationBatmanIndex = 14;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+		modelMatrixBatman = glm::rotate(modelMatrixBatman, -0.02f, glm::vec3(0, 1, 0));
+		animationBatmanIndex = 14;
+	}
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+		modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(0.0, 0.0, 0.02));
+		animationBatmanIndex = 14;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+		modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(0.0, 0.0, -0.02));
+		animationBatmanIndex = 14;
+	}
+
 	glfwPollEvents();
 	return continueApplication;
 }
@@ -847,6 +874,8 @@ void applicationLoop() {
 	modelMatrixGuardian = glm::rotate(modelMatrixGuardian, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 
 	modelMatrixCyborg = glm::translate(modelMatrixCyborg, glm::vec3(5.0f, 0.05, 0.0f));
+
+	modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(13.0f, 0.05f, 10.0f));
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -933,7 +962,7 @@ void applicationLoop() {
 		glBindTexture(GL_TEXTURE_2D, textureCespedID);
 		terreno.setPosition(glm::vec3(25, 0, 25));
 		//terreno.enableWireMode();
-		shaderMulLighting.setVectorFloat2("scaleUV" ,glm::value_ptr(glm::vec2(50.0)));
+		shaderMulLighting.setVectorFloat2("scaleUV" ,glm::value_ptr(glm::vec2(200.0)));
 		terreno.render();
 		shaderMulLighting.setVectorFloat2("scaleUV" ,glm::value_ptr(glm::vec2(1.0)));
 		//terreno.enableFillMode();
@@ -1114,6 +1143,19 @@ void applicationLoop() {
 		modelMatrixCyborgBody = glm::scale(modelMatrixCyborgBody, glm::vec3(0.009f));
 		cyborgModelAnimate.setAnimationIndex(1);
 		cyborgModelAnimate.render(modelMatrixCyborgBody);
+
+		glm::vec3 batmanNormal = terreno.getNormalTerrain(modelMatrixBatman[3][0], modelMatrixBatman[3][2]);
+		glm::vec3 batmanEjeX = glm::vec3(modelMatrixBatman[0]);
+		glm::vec3 batmanEjeZ = glm::normalize(glm::cross(batmanEjeX, batmanNormal));
+		batmanEjeX = glm::normalize(glm::cross(batmanNormal, batmanEjeZ));
+		modelMatrixBatman[0] = glm::vec4(batmanEjeX, 0.0);
+		modelMatrixBatman[1] = glm::vec4(batmanNormal, 0.0);
+		modelMatrixBatman[3][1] = terreno.getHeightTerrain(modelMatrixBatman[3][0], modelMatrixBatman[3][2]);
+		glm::mat4 modelMatrixBatmanBody = glm::mat4(modelMatrixBatman);
+		modelMatrixBatmanBody = glm::scale(modelMatrixBatmanBody, glm::vec3(0.005));
+		batmanModelAnimate.setAnimationIndex(animationBatmanIndex);
+		batmanModelAnimate.render(modelMatrixBatmanBody);
+		animationBatmanIndex = 8;
 
 		/*******************************************
 		 * Skybox
