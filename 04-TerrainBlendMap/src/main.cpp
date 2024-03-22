@@ -103,10 +103,17 @@ Model cowboyModelAnimate;
 Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
-// Terrain model instance
-Terrain terrain(-1, -1, 200, 8, "../Textures/heightmap.png");
+// Batman
+Model batmanModelAnimate;
 
-GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
+// Mixamo animation
+Model batmanModelAnimatePunching;
+Model batmanModelAnimateEvade;
+
+// Terrain model instance
+Terrain terrain(-1, -1, 200, 20, "../Textures/heightmapPractica3.png");
+
+GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID, textureSnowID;
 GLuint textureTerrainRID, textureTerrainGID, textureTerrainBID, textureTerrainBlendMapID;
 GLuint skyboxTextureID;
 
@@ -141,8 +148,12 @@ glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardian = glm::mat4(1.0f);
 glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
+glm::mat4 modelMatrixBatman = glm::mat4(1.0f);
+glm::mat4 modelMatrixBatmanPunching = glm::mat4(1.0f);
+glm::mat4 modelMatrixBatmanEvade = glm::mat4(1.0f);
 
 int animationMayowIndex = 1;
+int animationBatmanIndex = 8;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 float rotBuzzHead = 0.0, rotBuzzLeftarm = 0.0, rotBuzzLeftForeArm = 0.0, rotBuzzLeftHand = 0.0;
 int modelSelected = 0;
@@ -371,6 +382,17 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
+	//Batman
+	batmanModelAnimate.loadModel("../models/Batman_Beyond/Texture2D/batmanBeyon.fbx");
+	batmanModelAnimate.setShader(&shaderMulLighting);
+
+	// Mixamo Models Load
+	batmanModelAnimatePunching.loadModel("../models/mixamoModels/comboPunch.fbx");
+	batmanModelAnimatePunching.setShader(&shaderMulLighting);
+
+	batmanModelAnimateEvade.loadModel("../models/mixamoModels/aerialEvade.fbx");
+	batmanModelAnimateEvade.setShader(&shaderMulLighting);
+
 	// Terreno
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
@@ -536,7 +558,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureLandingPad.freeImage(); // Liberamos memoria
 
 	// Definiendo la textura
-	Texture textureR("../Textures/mud.png");
+	Texture textureR("../Textures/myBlendMapTextures/groundTexture.jpg");
 	textureR.loadImage(); // Cargar la textura
 	glGenTextures(1, &textureTerrainRID); // Creando el id de la textura del landingpad
 	glBindTexture(GL_TEXTURE_2D, textureTerrainRID); // Se enlaza la textura
@@ -554,7 +576,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureR.freeImage(); // Liberamos memoria
 
-	Texture textureG("../Textures/grassFlowers.png");
+	Texture textureG("../Textures/myBlendMapTextures/frozenGrassTexture.jpg");
 	textureG.loadImage(); // Cargar la textura
 	glGenTextures(1, &textureTerrainGID); // Creando el id de la textura del landingpad
 	glBindTexture(GL_TEXTURE_2D, textureTerrainGID); // Se enlaza la textura
@@ -572,7 +594,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureG.freeImage(); // Liberamos memoria
 
-	Texture textureB("../Textures/path.png");
+	Texture textureB("../Textures/myBlendMapTextures/stoneRoad.jpg");
 	textureB.loadImage(); // Cargar la textura
 	glGenTextures(1, &textureTerrainBID); // Creando el id de la textura del landingpad
 	glBindTexture(GL_TEXTURE_2D, textureTerrainBID); // Se enlaza la textura
@@ -590,7 +612,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureB.freeImage(); // Liberamos memoria
 
-	Texture textureBlendMap("../Textures/blendMap2024_2.png");
+	Texture textureBlendMap("../Textures/blendMapPractica4.png");
 	textureBlendMap.loadImage(); // Cargar la textura
 	glGenTextures(1, &textureTerrainBlendMapID); // Creando el id de la textura del landingpad
 	glBindTexture(GL_TEXTURE_2D, textureTerrainBlendMapID); // Se enlaza la textura
@@ -607,6 +629,25 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	else 
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureBlendMap.freeImage(); // Liberamos memoria
+
+	// Definiendo la textura
+	Texture textureSnow("../Textures/myBlendMapTextures/snowTexture.jpg");
+	textureSnow.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureSnowID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureSnowID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureSnow.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureSnow.getChannels() == 3 ? GL_RGB : GL_RGBA, textureSnow.getWidth(), textureSnow.getHeight(), 0,
+		textureSnow.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureSnow.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureSnow.freeImage(); // Liberamos memoria
 }
 
 void destroy() {
@@ -663,6 +704,9 @@ void destroy() {
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+	batmanModelAnimate.destroy();
+	batmanModelAnimatePunching.destroy();
+	batmanModelAnimateEvade.destroy();
 
 	// Terrains objects Delete
 	terrain.destroy();
@@ -678,6 +722,7 @@ void destroy() {
 	glDeleteTextures(1, &textureTerrainGID);
 	glDeleteTextures(1, &textureTerrainBID);
 	glDeleteTextures(1, &textureTerrainBlendMapID);
+	glDeleteTextures(1, &textureSnowID);
 
 	// Cube Maps Delete
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -747,7 +792,7 @@ bool processInput(bool continueApplication) {
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 4)
+		if(modelSelected > 5)
 			modelSelected = 0;
 		if(modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
@@ -892,6 +937,24 @@ bool processInput(bool continueApplication) {
 		animationMayowIndex = 0;
 	}
 
+	//Control Batman
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+		modelMatrixBatman = glm::rotate(modelMatrixBatman, 0.02f, glm::vec3(0, 1, 0));
+		animationBatmanIndex = 14;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+		modelMatrixBatman = glm::rotate(modelMatrixBatman, -0.02f, glm::vec3(0, 1, 0));
+		animationBatmanIndex = 14;
+	}
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+		modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(0.0, 0.0, 0.02));
+		animationBatmanIndex = 14;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+		modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(0.0, 0.0, -0.02));
+		animationBatmanIndex = 14;
+	}
+
 	glfwPollEvents();
 	return continueApplication;
 }
@@ -930,6 +993,11 @@ void applicationLoop() {
 	modelMatrixGuardian = glm::rotate(modelMatrixGuardian, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 
 	modelMatrixCyborg = glm::translate(modelMatrixCyborg, glm::vec3(5.0f, 0.05, 0.0f));
+
+	modelMatrixBatman = glm::translate(modelMatrixBatman, glm::vec3(13.0f, 0.05f, 10.0f));
+
+	modelMatrixBatmanPunching = glm::translate(modelMatrixBatman, glm::vec3(15.0f, 0.05f, 15.0f));
+	modelMatrixBatmanEvade = glm::translate(modelMatrixBatman, glm::vec3(15.0f, 0.05f, 20.0f));
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -1018,7 +1086,7 @@ void applicationLoop() {
 		
 		// Se activa la textura del agua
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureCespedID);
+		glBindTexture(GL_TEXTURE_2D, textureSnowID);
 		shaderTerrain.setInt("backgroundTexture", 0);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, textureTerrainRID);
@@ -1220,6 +1288,43 @@ void applicationLoop() {
 		modelMatrixCyborgBody = glm::scale(modelMatrixCyborgBody, glm::vec3(0.009f));
 		cyborgModelAnimate.setAnimationIndex(1);
 		cyborgModelAnimate.render(modelMatrixCyborgBody);
+
+		glm::vec3 batmanNormal = terrain.getNormalTerrain(modelMatrixBatman[3][0], modelMatrixBatman[3][2]);
+		glm::vec3 batmanEjeX = glm::vec3(modelMatrixBatman[0]);
+		glm::vec3 batmanEjeZ = glm::normalize(glm::cross(batmanEjeX, batmanNormal));
+		batmanEjeX = glm::normalize(glm::cross(batmanNormal, batmanEjeZ));
+		modelMatrixBatman[0] = glm::vec4(batmanEjeX, 0.0);
+		modelMatrixBatman[1] = glm::vec4(batmanNormal, 0.0);
+		modelMatrixBatman[3][1] = terrain.getHeightTerrain(modelMatrixBatman[3][0], modelMatrixBatman[3][2]);
+		glm::mat4 modelMatrixBatmanBody = glm::mat4(modelMatrixBatman);
+		modelMatrixBatmanBody = glm::scale(modelMatrixBatmanBody, glm::vec3(0.005));
+		batmanModelAnimate.setAnimationIndex(animationBatmanIndex);
+		batmanModelAnimate.render(modelMatrixBatmanBody);
+		animationBatmanIndex = 8;
+
+		glm::vec3 batmanPunchingNormal = terrain.getNormalTerrain(modelMatrixBatmanPunching[3][0], modelMatrixBatmanPunching[3][2]);
+		glm::vec3 batmanPunchingEjeX = glm::vec3(modelMatrixBatmanPunching[0]);
+		glm::vec3 batmanPunchingEjeZ = glm::normalize(glm::cross(batmanPunchingEjeX, batmanPunchingNormal));
+		batmanPunchingEjeX = glm::normalize(glm::cross(batmanPunchingNormal, batmanPunchingEjeZ));
+		modelMatrixBatmanPunching[0] = glm::vec4(batmanPunchingEjeX, 0.0);
+		modelMatrixBatmanPunching[1] = glm::vec4(batmanPunchingNormal, 0.0);
+		modelMatrixBatmanPunching[3][1] = terrain.getHeightTerrain(modelMatrixBatmanPunching[3][0], modelMatrixBatmanPunching[3][2]);
+		glm::mat4 modelMatrixBatmanPunchingBody = glm::mat4(modelMatrixBatmanPunching);
+		modelMatrixBatmanPunchingBody = glm::scale(modelMatrixBatmanPunchingBody, glm::vec3(0.005));
+		batmanModelAnimatePunching.render(modelMatrixBatmanPunchingBody);
+
+		glm::vec3 batmanEvadeNormal = terrain.getNormalTerrain(modelMatrixBatmanEvade[3][0], modelMatrixBatmanEvade[3][2]);
+		glm::vec3 batmanEvadeEjeX = glm::vec3(modelMatrixBatmanEvade[0]);
+		glm::vec3 batmanEvadeEjeZ = glm::normalize(glm::cross(batmanEvadeEjeX, batmanEvadeNormal));
+		batmanEvadeEjeX = glm::normalize(glm::cross(batmanNormal, batmanEjeZ));
+		modelMatrixBatmanEvade[0] = glm::vec4(batmanEvadeEjeX, 0.0);
+		modelMatrixBatmanEvade[1] = glm::vec4(batmanEvadeNormal, 0.0);
+		modelMatrixBatmanEvade[3][1] = terrain.getHeightTerrain(modelMatrixBatmanEvade[3][0], modelMatrixBatmanEvade[3][2]);
+		glm::mat4 modelMatrixBatmanEvadeBody = glm::mat4(modelMatrixBatmanEvade);
+		modelMatrixBatmanEvadeBody = glm::scale(modelMatrixBatmanEvadeBody, glm::vec3(0.005));
+		batmanModelAnimateEvade.render(modelMatrixBatmanEvadeBody);
+
+
 
 		/*******************************************
 		 * Skybox
