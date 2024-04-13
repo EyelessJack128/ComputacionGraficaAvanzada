@@ -39,6 +39,8 @@
 
 #include "Headers/AnimationUtils.h"
 
+#include "Headers/Colisiones.h"
+
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 int screenWidth;
@@ -222,6 +224,10 @@ bool isJump = false;
 float gravity = 1.81;
 double tmv = 0;
 double startTimeJump = 0;
+
+//Collider's Map
+std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>> collidersSBB;
+std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>> collidersOBB;
 
 // Variables animacion maquina de estados eclipse
 const float avance = 0.1;
@@ -1409,6 +1415,24 @@ void applicationLoop() {
 		skyboxSphere.render();
 		glCullFace(oldCullFaceMode);
 		glDepthFunc(oldDepthFuncMode);
+
+		//Creación de coliders
+		AbstractModel::SBB rockCollider;
+		glm::mat4 modelMatrixRockCollider = glm::mat4(matrixModelRock);
+		modelMatrixRockCollider = glm::scale(modelMatrixRockCollider, glm::vec3(1.0));
+		modelMatrixRockCollider = glm::translate(modelMatrixRockCollider, modelRock.getSbb().c);
+		rockCollider.c = modelMatrixRockCollider[3];
+		rockCollider.ratio = modelRock.getSbb().ratio;
+		addOrUpdateColliders(collidersSBB, "rock", rockCollider, matrixModelRock);
+
+		//Render de colliders
+		std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator it;
+		for(it = collidersSBB.begin(); it != collidersSBB.end(); it++){
+			glm::mat4 matrixCollider = glm::mat4();
+			matrixCollider = glm::translate(matrixCollider, std::get<0>(it->second).c);
+			matrixCollider = glm::scale(matrixCollider, glm::vec3(std::get<0>(it->second).ratio*2.0));
+			sphereCollider
+		}
 
 		glm::mat4 modelMatrixRay = glm::mat4(modelMatrixMayow);
 		modelMatrixRay = glm::translate(modelMatrixRay, glm::vec3(0, 1, 0));
