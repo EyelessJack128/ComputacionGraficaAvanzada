@@ -204,6 +204,8 @@ float rotHelHelBack = 0.0;
 int stateDoor = 0;
 float dorRotCount = 0.0;
 
+bool isPicking = false;
+
 // Lamps position
 std::vector<glm::vec3> lamp1Position = {
 	glm::vec3(-7.03, 0, -19.14),
@@ -815,6 +817,45 @@ bool processInput(bool continueApplication) {
 		return false;
 	}
 
+	if(glfwJoystickPresent(GLFW_JOYSTICK_1)){
+		//std::cout << "El Joystick esta presente" << std::endl;
+		int axesCount, buttonCount;
+		const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
+		//std::cout << "Numero de ejes disponibles: " << axesCount << std::endl;
+		//std::cout << "Left stick X axis " << axes[0] << std::endl; // Izquierda -1, Derecha 1
+		//std::cout << "Left stick Y axis " << axes[1] << std::endl; // Arriba -1, Abajo 1
+		//std::cout << "Right stick X axis " << axes[2] << std::endl;	// Izquierda -1, Derecha 1
+		//std::cout << "Right stick Y axis " << axes[3] << std::endl;	// Arriba -1, Abajo 1
+		//std::cout << "Left Trigger axis " << axes[4] << std::endl;	// Sin presionar -1, Presionando a fondo 1
+		//std::cout << "Right Trigger axis " << axes[5] << std::endl;	// Sin presionar -1, Presionando a fondo 1
+
+		if (fabs(axes[1]) > 0.02){
+			modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0, 0, -axes[1] * 0.1));
+			animationMayowIndex = 0;
+		}
+		if (fabs(axes[0]) > 0.02){
+			modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-axes[0] * 0.5f), glm::vec3(0, 1, 0));
+			animationMayowIndex = 0;
+		}
+		if (fabs(axes[2]) > 0.02)
+			camera->mouseMoveCamera(axes[2], 0.0, deltaTime);
+		if (fabs(axes[3]) > 0.02)
+			camera->mouseMoveCamera(0.0, axes[3], deltaTime);
+
+		const unsigned char *buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
+		std::cout << "Numero de ejes disponibles: " << buttonCount << std::endl;
+		if (buttons[0] == GLFW_PRESS){
+			std::cout << "Presionado " << std::endl;
+		}
+		if (!isJump && buttons[0] == GLFW_PRESS){
+			isJump = true;
+			startTimeJump = currTime;
+			tmv = 0;
+		}
+		
+
+	}
+
 	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
 	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
@@ -978,6 +1019,10 @@ bool processInput(bool continueApplication) {
 		tmv = 0;
 		isJump = true;
 	}
+	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+		isPicking = true;
+	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+		isPicking = false;
 
 	glfwPollEvents();
 	return continueApplication;
@@ -1041,6 +1086,8 @@ void applicationLoop() {
 		TimeManager::Instance().CalculateFrameRate(true);
 		deltaTime = TimeManager::Instance().DeltaTime;
 		psi = processInput(true);
+
+		std::map<std::string, bool> collisionDetector;
 
 		// Variables donde se guardan las matrices de cada articulacion por 1 frame
 		std::vector<float> matrixDartJoints;
@@ -1540,6 +1587,7 @@ void applicationLoop() {
 					isColision = true;
 				}
 			}
+			addOrUpdateCollisionDetection(collisionDetector, itObb1->first, isColision);
 		}
 
 		for (itSbb1 = collidersSBB.begin(); itSbb1 != collidersSBB.end(); itSbb1++){
@@ -1548,8 +1596,10 @@ void applicationLoop() {
 				if (testSphereOBox(std::get<0>(itSbb1->second), std::get<0>(itObb1->second))){
 					std::cout << "Hay colision entre " << itSbb1->first << " y el modelo " << itObb1->first << std::endl;
 					isColision = true;
+					addOrUpdateCollisionDetection(collisionDetector, itObb1->first, true);
 				}
 			}
+			addOrUpdateCollisionDetection(collisionDetector, itSbb1->first, isColision);
 		}
 
 		for (itSbb1 = collidersSBB.begin(); itSbb1 != collidersSBB.end(); itSbb1++){
@@ -1559,6 +1609,28 @@ void applicationLoop() {
 					std::cout << "Hay colision entre " << itSbb1->first << " y el modelo " << itSbb2->first << std::endl;
 					isColision = true;
 				}
+			}
+			addOrUpdateCollisionDetection(collisionDetector, itSbb1->first, isColision);
+		}
+
+		std::map<std::string, bool>::iterator itCollision;
+		for(itCollision = collisionDetector.begin(); itCollision != collisionDetector.end(); itCollision++){
+			std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator itOBBBuscado = collidersOBB.find(itCollision->first);
+			std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator itSBBBuscado = collidersSBB.find(itCollision->first);
+			if (itOBBBuscado != collidersOBB.end()){
+				if (itCollision->second){
+					addOrUpdateColliders(collidersOBB, itCollision->first);
+				} else {
+					if(itCollision->first.compare("mayow") == 0)
+						modelMatrixMayow = std::get<1>(itOBBBuscado->second);
+					if(itCollision->first.compare("dart") == 0)
+						modelMatrixMayow = std::get<1>(itOBBBuscado->second);
+				}
+				
+			}
+			if (itSBBBuscado != collidersSBB.end()){
+				if (itCollision->second)
+					addOrUpdateColliders(collidersSBB, itCollision->first);
 			}
 		}
 
@@ -1615,6 +1687,31 @@ void applicationLoop() {
 				std::cout << "Colision rayo mayow y " << itSbb1->first << std::endl;
 			}
 		}
+
+		std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm:: mat4>>::iterator itOBB;
+		for (itOBB = collidersOBB.begin(); itOBB != collidersOBB.end(); itOBB++){
+			if(testRayOBB(ori, targetRay, std::get<0>(itOBB ->second))){
+				std::cout << "Colision rayo mayow y el modelo " << itOBB->first << std::endl;
+			}
+		}
+
+		if (isPicking){
+			glm::vec4 viewPort = glm::vec4(0.0, 0.0, screenWidth, screenHeight);
+			glm::vec3 o = glm::unProject(glm::vec3(lastMousePosX, screenHeight-lastMousePosY, 0.0f), view, projection, viewPort); // Obtener la coordenada en 3D del plano cercano en el pixel seleccionado en el plano cercano
+			glm::vec3 t = glm::unProject(glm::vec3(lastMousePosX, screenHeight-lastMousePosY, 1.0f), view, projection, viewPort); // Obtener la coordenada en 3D del plano cercano en el pixel seleccionado en el plano lejano
+			for (itOBB = collidersOBB.begin(); itOBB != collidersOBB.end(); itOBB++){
+				if(testRayOBB(o, t, std::get<0>(itOBB ->second))){
+					std::cout << "Seleccionando el objeto =>" << itOBB->first << std::endl;
+				}
+			}
+			for ( itSbb1 = collidersSBB.begin(); itSbb1 != collidersSBB.end(); itSbb1++){
+				float tRint;
+				if (raySphereIntersect(o, t, glm::normalize(t-o), std::get<0>(itSbb1->second), tRint)){
+					std::cout << "Seleccionando la esfera =>" << itSbb1->first << std::endl;
+				}
+			}
+		}
+		
 
 		
 		// Animaciones por keyframes dart Vader
